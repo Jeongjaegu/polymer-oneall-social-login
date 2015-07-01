@@ -1,0 +1,53 @@
+<!doctype html>
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+		<title>seed-element Demo</title>
+		<script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+		<link rel="import" href="../oneall-social-login.html">
+	</head>
+	<body>
+	<div style="margin-bottom: 50px;">
+		<oneall-social-login subdomain='yoursubdomain'
+					attach-popup-ui="oneall-popup-link"
+					callback-uri="http://www.oneall.com/callback/"
+					providers="facebook,twitter,linkedin,google,yahoo,foursquare,blogger,github"
+					provider-scope = '{"google":"https://www.googleapis.com/auth/userinfo.profile", "twitter":"user"}'
+					>
+			<a id="oneall-popup-link">Login link</a>
+		</oneall-social-login>
+	</div>
+
+		<!-- triggers a popup automatically
+		<oneall-social-login subdomain='yoursubdomain'
+					do-popup-ui
+					callback-uri="http://www.oneall.com/callback/"
+					providers="facebook,twitter,linkedin,google,yahoo,foursquare,blogger,github"
+					>
+		</oneall-social-login>
+		-->
+
+	<div>
+		<oneall-social-login subdomain='yoursubdomain'
+					do-render-ui="oneall-container"
+					callback-uri="http://www.oneall.com/callback/"
+					providers="facebook,twitter,linkedin,google,yahoo,foursquare,blogger,github"
+					provider-scope = '{"google":"https://www.googleapis.com/auth/userinfo.profile", "twitter":"user"}'
+					>
+			<div id="oneall-container"></div>
+		</oneall-social-login>
+	</div>
+
+
+	</body>
+</html>

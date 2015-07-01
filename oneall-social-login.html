@@ -1,0 +1,205 @@
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<link rel="import" href="../polymer/polymer.html">
+
+<!--
+An element providing a solution to no problem in particular.
+
+Example:
+
+    <oneall-social-login>
+    	<a id="oneall-container">Login here</a> [if you use attachPopupUi]
+    	<div id="oneall-container">Login here</div> [if you use doRenderUi]
+    	[leave empty if you use doPopupUi]
+    </oneall-social-login>
+
+@demo
+-->
+<dom-module id="oneall-social-login">
+
+  <template>
+	  <content></content>
+  </template>
+
+</dom-module>
+
+<script>
+
+	var _oneall = _oneall || [];
+
+  Polymer({
+
+    is: 'oneall-social-login',
+
+    properties: {
+		/** subdomain used to complete URL '//[SUBDOMAIN].api.oneall.com/socialize/library.js'
+		 * Check your oneAll account to know your subdomain name. */
+		subdomain: {
+			type: String
+		},
+
+		/** Sets the callback_uri to return to after having authenticated with a social network.  */
+		callbackUri: {
+			type: String,
+			value: function () { return window.location.href; }
+		},
+
+		/** Sets the list of providers separated with a ,
+		 * Example: facebook,twitter,google */
+		providers: {
+			type: String,
+			value: function () { return ''; }
+		},
+
+		/** Specify a full URL to a CSS stylesheet on your server. The stylesheet is included in the widget template and allows you to customize it's appearance. An example stylesheet can be downloaded on oneAll website  */
+		customCss: {
+			type: String,
+			value: function () { return ''; }
+		},
+
+		/** Sets the maximum number of providers that should be displayed vertically and horizontally in one call.   */
+		gridSizes: {
+			type: String,
+			value: function () { return '2,2'; }
+		},
+
+		/** Set the permissions/scope to be requested from the user during the authentication with his social network account. The specified value is forwarded without modification to the social network; please take care to use the format expected by the social network. If no value is given, then a scope based on the social network settings in your OneAll account will be used.
+		 *
+		 *  Example: {"google":"https://www.googleapis.com/auth/userinfo.profile", "facebook":"user_website,user_work_history"}
+		 *
+		 *  It needs to be a valid JSON and the keys are the providers and needs to be in your providers list. */
+		providerScope: {
+		  type: Object,
+		  notify: false,
+		  value: function() { return {}; }
+		},
+
+		/** This flag controls whether the social network authentication is displayed in a popup or in the same browser window. The default value autodetect enables popups on desktop computers and disables them on mobile devices.  */
+		popupUsage: {
+			type: String,
+			value: function () { return 'autodetect'; }
+		},
+
+		/** Sets the user_token of the currently logged in user. This method is used by oneAll Social Link service.A */
+		userToken: {
+			type: String,
+			value: function () { return ''; }
+		},
+
+		/** Attaches an onclick event to the DOM container with the given id.
+		 *
+		 * A modal dialog will be shown whenver the users clicks on that container. The user can then click on one of the providers to start the authentication process.
+		 *
+		 * Has less priority than doRenderUi and doPopupUi if many are set by mistake */
+		attachPopupUi: {
+			type: String,
+			value: function () { return ''; }
+		},
+
+		/** Boolean to set to true if you want to trigger immediately a login popup.
+		 *
+		 * Has the priority on doRenderUi and attachPopupUi if many are set by mistake */
+		doPopupUi: Boolean,
+
+		/** Renders the widget and displays the chosen providers in the DOM container with the specified id.
+		 *
+		 * Has less priority than doPopupUi but more than attachPopupUi if many are set by mistake */
+		doRenderUi: {
+			type: String,
+			value: function () { return ''; }
+		},
+
+		/** Forces the user to re-authenticate when connecting with his social network account. If set to true, the social network will ask the user to re-enter his credentials. Not all providers support this feature. */
+		forceReAuth: {
+			type: Boolean,
+			value: function () { return false; }
+		}
+    },
+
+    // Element Lifecycle
+
+    ready: function() {
+		 _oneall.push(['social_login', 'set_callback_uri', this.callbackUri]);
+
+		var providers = [];
+		if (this.providers !== '') {
+			providers = this.providers.split(',');
+		}
+		if (providers.length > 0) {
+			_oneall.push(['social_login', 'set_providers', providers]);
+			for (var key in this.providerScope) {
+			   if (this.providerScope.hasOwnProperty(key) && providers.indexOf(key) > -1) {
+				   _oneall.push(['social_login', 'set_provider_scope', key, this.providerScope[key]]);
+				}
+			}
+		}
+
+		if (this.customCss !== '') {
+			 _oneall.push(['social_login', 'set_custom_css_uri', this.customCss]);
+		}
+
+		if (this.popupUsage === 'autodetect' || this.popupUsage === 'always' || this.popupUsage === 'never') {
+			 _oneall.push(['social_login', 'set_popup_usage', this.popupUsage]);
+		}
+
+		if (this.userToken !== '') {
+			 _oneall.push(['social_login', 'set_user_token', this.userToken]);
+		}
+
+		if (this.doPopupUi === true) {
+			_oneall.push(['social_login', 'do_popup_ui']);
+		} else if (this.doRenderUi !== '') {
+			_oneall.push(['social_login', 'do_render_ui', this.doRenderUi]);
+
+			var gridSizes = [];
+			if (this.gridSizes !== '') {
+				gridSizes = this.gridSizes.split(',');
+			}
+			if (gridSizes.length === 2) {
+				gridSizes[0] = parseInt(gridSizes[0], 10);
+				gridSizes[1] = parseInt(gridSizes[1], 10);
+				_oneall.push(['social_login', 'set_grid_sizes', gridSizes]);
+			}
+		} else if (this.attachPopupUi !== '') {
+			_oneall.push(['social_login', 'attach_onclick_popup_ui', this.attachPopupUi]);
+		}
+
+		if (this.forceReAuth === true) {
+			_oneall.push(['social_login', 'set_force_re_authentication', true]);
+		} else {
+			_oneall.push(['social_login', 'set_force_re_authentication', false]);
+		}
+
+		  var oa = document.createElement('script');
+		  oa.type = 'text/javascript'; oa.async = true;
+		  oa.src = '//' + this.subdomain + '.api.oneall.com/socialize/library.js';
+		  var s = document.getElementsByTagName('script')[0];
+		  s.parentNode.insertBefore(oa, s);
+    },
+
+    attached: function() {
+      // `attached` fires once the element and its parents have been inserted
+      // into a document.
+      //
+      // This is a good place to perform any work related to your element's
+      // visual state or active behavior (measuring sizes, beginning animations,
+      // loading resources, etc).
+		/* Initialise the asynchronous queue */
+    },
+
+    detached: function() {
+      // The analog to `attached`, `detached` fires when the element has been
+      // removed from a document.
+      //
+      // Use this to clean up anything you did in `attached`.
+    },
+  });
+
+</script>
