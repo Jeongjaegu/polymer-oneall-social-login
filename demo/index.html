@@ -12,24 +12,32 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 	<head>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
-		<title>seed-element Demo</title>
+		<title>Oneall-social-login Demo</title>
 		<script src="../../webcomponentsjs/webcomponents-lite.js"></script>
 		<link rel="import" href="../oneall-social-login.html">
+		<script type="text/javascript">
+			var my_function = function (){alert("Widget Loaded");}
+		</script>
 	</head>
 	<body>
 	<div style="margin-bottom: 50px;">
-		<oneall-social-login subdomain='yoursubdomain'
+		<oneall-social-login subdomain="yoursubdomain"
 					attach-popup-ui="oneall-popup-link"
 					callback-uri="http://www.oneall.com/callback/"
 					providers="facebook,twitter,linkedin,google,yahoo,foursquare,blogger,github"
 					provider-scope = '{"google":"https://www.googleapis.com/auth/userinfo.profile", "twitter":"user"}'
+					set-sso-realm = '["fruits", "apple"]'
+					do-check-sso-session = "true"
+					do-register-sso-session = "session_token"
+					add-event = '{"on_open_popup_ui":"my_function"}'
+					grid-sizes = '2,2'
 					>
 			<a id="oneall-popup-link">Login link</a>
 		</oneall-social-login>
 	</div>
 
 		<!-- triggers a popup automatically
-		<oneall-social-login subdomain='yoursubdomain'
+		<oneall-social-login subdomain="yoursubdomain"
 					do-popup-ui
 					callback-uri="http://www.oneall.com/callback/"
 					providers="facebook,twitter,linkedin,google,yahoo,foursquare,blogger,github"
@@ -38,11 +46,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 		-->
 
 	<div>
-		<oneall-social-login subdomain='yoursubdomain'
+		<oneall-social-login subdomain="yoursubdomain"
 					do-render-ui="oneall-container"
 					callback-uri="http://www.oneall.com/callback/"
 					providers="facebook,twitter,linkedin,google,yahoo,foursquare,blogger,github"
 					provider-scope = '{"google":"https://www.googleapis.com/auth/userinfo.profile", "twitter":"user"}'
+					grid-sizes = '3,3'
 					>
 			<div id="oneall-container"></div>
 		</oneall-social-login>

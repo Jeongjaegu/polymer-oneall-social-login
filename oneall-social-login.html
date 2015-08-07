@@ -116,10 +116,67 @@ Example:
 			value: function () { return ''; }
 		},
 
+		/**  Immediately starts the authentication process with the given provider.
+		 *
+		 * Has the priority on everything
+		 *
+		 * First item is provider and second item (optional) is login data (i.e. an url for a login with OpenId) */
+		doLogin: {
+			type: Array,
+			value: function () { return []; }
+		},
+
+		/**  Defines a custom JavaScript function that is executed whenever an event is triggered.
+		 *
+		 * Overrides any function set up using addEvent for this event.
+		 *
+		 * key is an event and value is a global function name
+		 *
+		 * Example: {"on_open_popup_ui": "my_function"}
+		 * */
+		setEvent: {
+			type: Object,
+			value: function () { return {}; }
+		},
+
+		/** With this method you can enqueue multiple functions that are exectued successively whenever an event is triggered.
+		 *
+		 * key is an event and value is a global function name
+		 *
+		 * Example: {"on_open_popup_ui": "my_function","on_close_popup_ui": "my_function2"}
+		 * */
+		addEvent: {
+			type: Object,
+			value: function () { return {}; }
+		},
+
 		/** Forces the user to re-authenticate when connecting with his social network account. If set to true, the social network will ask the user to re-enter his credentials. Not all providers support this feature. */
 		forceReAuth: {
 			type: Boolean,
 			value: function () { return false; }
+		},
+
+		/** This method must be called on every page and as long as the user is not logged in. When called, the OneAll SSO service will try to recognize the user and log him in if he's coming from another of your websites.  */
+		doCheckSsoSession: {
+			type: Boolean,
+			value: function () { return false; }
+		},
+
+		/** Once a user has authenticated, you must create a new sso_session_token and call this method to attach the token to the user. This allows the OneAll SSO service to recognize the user when he switches from one of your websites to another.
+		 *
+		 * More info to create a token here: https://docs.oneall.com/api/resources/sso/create-session/ */
+		doRegisterSsoSession: {
+			type: String,
+			value: function () { return ''; }
+		},
+
+		/**  By default, users that have logged in on one of your websites will automatically be logged in on all of your websites that are using SSO too. By using a realm you change this behavior and subdivide your websites into groups.
+		 *
+		 * Users logging in on a website in a given realm will automatically be logged in when they vist another website that is part the same (or a dependent) realm, but not when visiting a different realm.
+		 */
+		setSsoRealm: {
+			type: Array,
+			value: function () { return []; }
 		}
     },
 
@@ -128,14 +185,23 @@ Example:
     ready: function() {
 		 _oneall.push(['social_login', 'set_callback_uri', this.callbackUri]);
 
+		if (this.doLogin !== null && this.doLogin.length > 0) {
+			if (this.doLogin.length > 1) {
+				var loginData = this.doLogin[1];
+			}
+			var provider = this.doLogin[0];
+			_oneall.push(['social_login', 'do_login', provider, loginData]);
+		}
+
 		var providers = [];
 		if (this.providers !== '') {
 			providers = this.providers.split(',');
 		}
 		if (providers.length > 0) {
 			_oneall.push(['social_login', 'set_providers', providers]);
-			for (var key in this.providerScope) {
-			   if (this.providerScope.hasOwnProperty(key) && providers.indexOf(key) > -1) {
+			var key;
+			for (key in this.providerScope) {
+			   if (providers.indexOf(key) > -1) {
 				   _oneall.push(['social_login', 'set_provider_scope', key, this.providerScope[key]]);
 				}
 			}
@@ -153,11 +219,44 @@ Example:
 			 _oneall.push(['social_login', 'set_user_token', this.userToken]);
 		}
 
+		if (this.forceReAuth === true) {
+			_oneall.push(['social_login', 'set_force_re_authentication', true]);
+		} else {
+			_oneall.push(['social_login', 'set_force_re_authentication', false]);
+		}
+
+		var event;
+		if (Object.keys(this.addEvent).length > 0) {
+			for (event in this.addEvent) {
+				_oneall.push(['social_login', 'add_event', event, eval(this.addEvent[event])]);
+			}
+		}
+		if (Object.keys(this.setEvent).length > 0) {
+			for (event in this.setEvent) {
+				_oneall.push(['social_login', 'set_event', event, eval(this.setEvent[event])]);
+			}
+		}
+
+		if (this.setSsoRealm !== null && this.setSsoRealm.length > 0) {
+			var i;
+			var params = ['single_sign_on', 'set_sso_realm'];
+			for (i = 0; i < this.setSsoRealm.length; i++) {
+				params.push(this.setSsoRealm[i]);
+			}
+			_oneall.push(params);
+		}
+
+		if (this.doRegisterSsoSession !== '') {
+			_oneall.push(['single_sign_on', 'do_register_sso_session', this.doRegisterSsoSession]);
+		}
+
+		if (this.doCheckSsoSession === true) {
+			_oneall.push(['single_sign_on', 'do_check_for_sso_session']);
+		}
+
 		if (this.doPopupUi === true) {
 			_oneall.push(['social_login', 'do_popup_ui']);
 		} else if (this.doRenderUi !== '') {
-			_oneall.push(['social_login', 'do_render_ui', this.doRenderUi]);
-
 			var gridSizes = [];
 			if (this.gridSizes !== '') {
 				gridSizes = this.gridSizes.split(',');
@@ -167,21 +266,16 @@ Example:
 				gridSizes[1] = parseInt(gridSizes[1], 10);
 				_oneall.push(['social_login', 'set_grid_sizes', gridSizes]);
 			}
+			_oneall.push(['social_login', 'do_render_ui', this.doRenderUi]);
 		} else if (this.attachPopupUi !== '') {
 			_oneall.push(['social_login', 'attach_onclick_popup_ui', this.attachPopupUi]);
 		}
 
-		if (this.forceReAuth === true) {
-			_oneall.push(['social_login', 'set_force_re_authentication', true]);
-		} else {
-			_oneall.push(['social_login', 'set_force_re_authentication', false]);
-		}
-
-		  var oa = document.createElement('script');
-		  oa.type = 'text/javascript'; oa.async = true;
-		  oa.src = '//' + this.subdomain + '.api.oneall.com/socialize/library.js';
-		  var s = document.getElementsByTagName('script')[0];
-		  s.parentNode.insertBefore(oa, s);
+		var oa = document.createElement('script');
+		oa.type = 'text/javascript'; oa.async = true;
+		oa.src = '//' + this.subdomain + '.api.oneall.com/socialize/library.js';
+		var s = document.getElementsByTagName('script')[0];
+		s.parentNode.insertBefore(oa, s);
     },
 
     attached: function() {
